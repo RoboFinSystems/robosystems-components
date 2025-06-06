@@ -1,5 +1,15 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { RoboSystemsAuthClient, User, AuthContextType } from '@robosystems/auth-core'
+import {
+  AuthContextType,
+  RoboSystemsAuthClient,
+  User,
+} from '@robosystems/auth-core'
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
@@ -24,14 +34,17 @@ export function AuthProvider({ children, apiUrl }: AuthProviderProps) {
   useEffect(() => {
     if (!isAuthenticated) return
 
-    const interval = setInterval(async () => {
-      try {
-        await refreshSession()
-      } catch (error) {
-        console.error('Auto-refresh failed:', error)
-        await logout()
-      }
-    }, 10 * 60 * 1000) // 10 minutes
+    const interval = setInterval(
+      async () => {
+        try {
+          await refreshSession()
+        } catch (error) {
+          // Auto-refresh failed, logout user silently
+          await logout()
+        }
+      },
+      10 * 60 * 1000
+    ) // 10 minutes
 
     return () => clearInterval(interval)
   }, [isAuthenticated])
@@ -52,6 +65,7 @@ export function AuthProvider({ children, apiUrl }: AuthProviderProps) {
     const response = await authClient.login(email, password)
     if (response.success) {
       setUser(response.user)
+      return response.user
     } else {
       throw new Error(response.message || 'Login failed')
     }
@@ -61,6 +75,7 @@ export function AuthProvider({ children, apiUrl }: AuthProviderProps) {
     const response = await authClient.register(email, password, name)
     if (response.success) {
       setUser(response.user)
+      return response.user
     } else {
       throw new Error(response.message || 'Registration failed')
     }
@@ -70,7 +85,7 @@ export function AuthProvider({ children, apiUrl }: AuthProviderProps) {
     try {
       await authClient.logout()
     } catch (error) {
-      console.error('Logout error:', error)
+      // Logout error - continue with local logout regardless
     } finally {
       setUser(null)
     }
@@ -92,14 +107,10 @@ export function AuthProvider({ children, apiUrl }: AuthProviderProps) {
     login,
     register,
     logout,
-    refreshSession
+    refreshSession,
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth(): AuthContextType {
