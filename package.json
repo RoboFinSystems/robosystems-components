@@ -4,8 +4,11 @@
   "description": "Shared React components for RoboSystems applications",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
   "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
     "./auth-core": {
       "types": "./packages/auth-core/dist/index.d.ts",
       "import": "./packages/auth-core/dist/index.mjs",
@@ -23,13 +26,15 @@
     }
   },
   "files": [
+    "dist",
     "packages/*/dist"
   ],
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build && tsup",
+    "build:root": "tsup",
     "dev": "turbo run dev",
     "lint": "eslint 'packages/*/src/**/*.{ts,tsx}'",
     "lint:fix": "eslint 'packages/*/src/**/*.{ts,tsx}' --fix",
@@ -57,6 +62,7 @@
     "eslint-plugin-react-hooks": "^5",
     "prettier": "^3",
     "prettier-plugin-organize-imports": "^4",
+    "tsup": "^8.0.2",
     "turbo": "^1.13.2",
     "typescript": "^5.4.5"
   },
