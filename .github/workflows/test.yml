@@ -1,0 +1,46 @@
+name: Test
+
+on:
+  workflow_call:
+    secrets:
+      ACTIONS_TOKEN:
+        required: true
+
+# Ensure only one test workflow runs at a time for the entire repository to avoid port conflicts
+concurrency:
+  group: robosystems-components-test
+  cancel-in-progress: false
+
+jobs:
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.REPOSITORY_NAME || 'RoboFinSystems/robosystems-components' }}
+          ref: ${{ github.ref }}
+          token: ${{ secrets.ACTIONS_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Dependencies
+        run: |
+          # Use isolated cache directory to avoid conflicts between concurrent runs
+          export npm_config_cache="${{ github.workspace }}/.npm-cache"
+          npm install
+
+      - name: Run Tests
+        run: npm test
+
+      - name: Run Type Check
+        run: npm run typecheck
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Build
+        run: npm run build

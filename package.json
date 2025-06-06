@@ -15,6 +15,11 @@
       "types": "./packages/auth-components/dist/index.d.ts",
       "import": "./packages/auth-components/dist/index.mjs",
       "require": "./packages/auth-components/dist/index.js"
+    },
+    "./sdk": {
+      "types": "./packages/sdk/dist/index.d.ts",
+      "import": "./packages/sdk/dist/index.mjs",
+      "require": "./packages/sdk/dist/index.js"
     }
   },
   "files": [
@@ -35,6 +40,7 @@
     "test:watch": "turbo run test:watch",
     "test:coverage": "turbo run test:coverage",
     "clean": "turbo run clean",
+    "generate:sdk": "npm run generate:sdk --workspace=@robosystems/sdk",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build --filter=./packages/* && changeset publish"
