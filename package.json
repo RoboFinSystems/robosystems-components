@@ -8,28 +8,10 @@
     ".": {
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
-    },
-    "./auth-core": {
-      "types": "./packages/auth-core/dist/index.d.ts",
-      "import": "./packages/auth-core/dist/index.mjs",
-      "require": "./packages/auth-core/dist/index.js"
-    },
-    "./auth-components": {
-      "types": "./packages/auth-components/dist/index.d.ts",
-      "import": "./packages/auth-components/dist/index.mjs",
-      "require": "./packages/auth-components/dist/index.js"
-    },
-    "./sdk": {
-      "types": "./packages/sdk/dist/index.d.ts",
-      "import": "./packages/sdk/dist/index.mjs",
-      "require": "./packages/sdk/dist/index.js"
     }
   },
   "files": [
-    "dist",
-    "packages/auth-core/dist",
-    "packages/auth-components/dist", 
-    "packages/sdk/dist"
+    "dist"
   ],
   "workspaces": [
     "packages/*"
