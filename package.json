@@ -27,7 +27,9 @@
   },
   "files": [
     "dist",
-    "packages/*/dist"
+    "packages/auth-core/dist",
+    "packages/auth-components/dist", 
+    "packages/sdk/dist"
   ],
   "workspaces": [
     "packages/*"
