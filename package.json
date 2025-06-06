@@ -1,0 +1,44 @@
+{
+  "name": "robosystems-components",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared React components for RoboSystems applications",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "eslint 'packages/*/src/**/*.{ts,tsx}'",
+    "lint:fix": "eslint 'packages/*/src/**/*.{ts,tsx}' --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "test:coverage": "turbo run test:coverage",
+    "clean": "turbo run clean",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo run build --filter=./packages/* && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "@typescript-eslint/eslint-plugin": "^7",
+    "@typescript-eslint/parser": "^7",
+    "eslint": "^8",
+    "eslint-config-prettier": "^10",
+    "eslint-plugin-jsx-a11y": "^6",
+    "eslint-plugin-prettier": "^5",
+    "eslint-plugin-react": "^7",
+    "eslint-plugin-react-hooks": "^5",
+    "prettier": "^3",
+    "prettier-plugin-organize-imports": "^4",
+    "turbo": "^1.13.2",
+    "typescript": "^5.4.5"
+  },
+  "packageManager": "npm@10.5.0",
+  "engines": {
+    "node": ">=18"
+  }
+}

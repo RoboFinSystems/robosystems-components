@@ -1,0 +1,1 @@
+// Global test setup for auth-core package
