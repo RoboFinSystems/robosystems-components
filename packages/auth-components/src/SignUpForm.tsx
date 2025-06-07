@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
 import { RoboSystemsAuthClient, User } from '@robosystems/auth-core'
+import React, { useState } from 'react'
 
 export interface SignUpFormProps {
   onSuccess?: (user: User) => void
@@ -20,13 +20,13 @@ export function SignUpForm({
   showConfirmPassword = true,
   showTermsAcceptance = true,
   autoSignIn = false,
-  apiUrl
+  apiUrl,
 }: SignUpFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -54,13 +54,17 @@ export function SignUpForm({
     }
 
     try {
-      const result = await authClient.register(formData.email, formData.password, formData.name)
+      const result = await authClient.register(
+        formData.email,
+        formData.password,
+        formData.name
+      )
 
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess(result.user)
       }
-      
+
       // Use window.location.href for reliable redirect
       window.location.href = redirectTo
     } catch (error: any) {
@@ -94,10 +98,13 @@ export function SignUpForm({
             {error}
           </div>
         )}
-        
+
         <div className="space-y-3">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-200">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-200 mt-2"
+            >
               Full Name
             </label>
             <input
@@ -112,9 +119,12 @@ export function SignUpForm({
               disabled={loading}
             />
           </div>
-          
+
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-200">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-200 mt-2"
+            >
               Email Address
             </label>
             <input
@@ -129,9 +139,12 @@ export function SignUpForm({
               disabled={loading}
             />
           </div>
-          
+
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-200">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-200 mt-2"
+            >
               Password
             </label>
             <input
@@ -149,7 +162,10 @@ export function SignUpForm({
 
           {showConfirmPassword && (
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-200">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-200 mt-2"
+              >
                 Confirm Password
               </label>
               <input
@@ -195,21 +211,7 @@ export function SignUpForm({
             </button>
           </div>
         )}
-
-        <div className="text-center">
-          <p className="text-sm text-gray-400">
-            Already have an account?{' '}
-            <button
-              type="button"
-              onClick={handleSignInClick}
-              className="font-medium text-blue-400 hover:text-blue-300"
-            >
-              Sign in here
-            </button>
-          </p>
-        </div>
       </form>
     </div>
   )
 }
-

@@ -1,14 +1,13 @@
 import '@testing-library/jest-dom'
-import React from 'react'
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { SignUpForm } from '../src/SignUpForm'
 
 // Mock window.location
 Object.defineProperty(window, 'location', {
   value: {
-    href: ''
+    href: '',
   },
-  writable: true
+  writable: true,
 })
 
 // Mock the auth client
@@ -18,8 +17,8 @@ jest.mock('@robosystems/auth-core', () => ({
     login: jest.fn(),
     register: mockRegister,
     logout: jest.fn(),
-    refreshSession: jest.fn()
-  }))
+    refreshSession: jest.fn(),
+  })),
 }))
 
 function renderSignUpForm(props = {}) {
@@ -27,7 +26,7 @@ function renderSignUpForm(props = {}) {
     apiUrl: 'https://api.test.com',
     onSuccess: jest.fn(),
     onRedirect: jest.fn(),
-    ...props
+    ...props,
   }
   return render(<SignUpForm {...defaultProps} />)
 }
@@ -47,7 +46,9 @@ describe('SignUpForm', () => {
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /create account/i })
+    ).toBeInTheDocument()
   })
 
   it('should not render confirm password field when showConfirmPassword is false', async () => {
@@ -75,7 +76,9 @@ describe('SignUpForm', () => {
       fireEvent.change(nameInput, { target: { value: 'John Doe' } })
       fireEvent.change(emailInput, { target: { value: 'john@example.com' } })
       fireEvent.change(passwordInput, { target: { value: 'password123' } })
-      fireEvent.change(confirmPasswordInput, { target: { value: 'password123' } })
+      fireEvent.change(confirmPasswordInput, {
+        target: { value: 'password123' },
+      })
     })
 
     expect(nameInput).toHaveValue('John Doe')
@@ -99,7 +102,9 @@ describe('SignUpForm', () => {
       fireEvent.change(nameInput, { target: { value: 'John Doe' } })
       fireEvent.change(emailInput, { target: { value: 'john@example.com' } })
       fireEvent.change(passwordInput, { target: { value: 'password123' } })
-      fireEvent.change(confirmPasswordInput, { target: { value: 'differentpassword' } })
+      fireEvent.change(confirmPasswordInput, {
+        target: { value: 'differentpassword' },
+      })
       fireEvent.click(submitButton)
     })
 
@@ -110,14 +115,14 @@ describe('SignUpForm', () => {
   it('should call onSuccess and redirect on successful registration', async () => {
     const mockOnSuccess = jest.fn()
     const mockUser = { id: '1', email: 'john@example.com', name: 'John Doe' }
-    
+
     mockRegister.mockResolvedValueOnce({ user: mockUser })
 
     await act(async () => {
-      renderSignUpForm({ 
+      renderSignUpForm({
         onSuccess: mockOnSuccess,
         showConfirmPassword: true,
-        redirectTo: '/login'
+        redirectTo: '/login',
       })
     })
 
@@ -131,12 +136,18 @@ describe('SignUpForm', () => {
       fireEvent.change(nameInput, { target: { value: 'John Doe' } })
       fireEvent.change(emailInput, { target: { value: 'john@example.com' } })
       fireEvent.change(passwordInput, { target: { value: 'password123' } })
-      fireEvent.change(confirmPasswordInput, { target: { value: 'password123' } })
+      fireEvent.change(confirmPasswordInput, {
+        target: { value: 'password123' },
+      })
       fireEvent.click(submitButton)
     })
 
     await waitFor(() => {
-      expect(mockRegister).toHaveBeenCalledWith('john@example.com', 'password123', 'John Doe')
+      expect(mockRegister).toHaveBeenCalledWith(
+        'john@example.com',
+        'password123',
+        'John Doe'
+      )
       expect(mockOnSuccess).toHaveBeenCalledWith(mockUser)
       expect(window.location.href).toBe('/login')
     })
@@ -159,7 +170,9 @@ describe('SignUpForm', () => {
       fireEvent.change(nameInput, { target: { value: 'John Doe' } })
       fireEvent.change(emailInput, { target: { value: 'john@example.com' } })
       fireEvent.change(passwordInput, { target: { value: 'password123' } })
-      fireEvent.change(confirmPasswordInput, { target: { value: 'password123' } })
+      fireEvent.change(confirmPasswordInput, {
+        target: { value: 'password123' },
+      })
       fireEvent.click(submitButton)
     })
 
@@ -170,7 +183,9 @@ describe('SignUpForm', () => {
 
   it('should show loading state during registration', async () => {
     let resolveRegister: (value: any) => void
-    const registerPromise = new Promise(resolve => { resolveRegister = resolve })
+    const registerPromise = new Promise((resolve) => {
+      resolveRegister = resolve
+    })
     mockRegister.mockReturnValueOnce(registerPromise)
 
     await act(async () => {
@@ -187,7 +202,9 @@ describe('SignUpForm', () => {
       fireEvent.change(nameInput, { target: { value: 'John Doe' } })
       fireEvent.change(emailInput, { target: { value: 'john@example.com' } })
       fireEvent.change(passwordInput, { target: { value: 'password123' } })
-      fireEvent.change(confirmPasswordInput, { target: { value: 'password123' } })
+      fireEvent.change(confirmPasswordInput, {
+        target: { value: 'password123' },
+      })
       fireEvent.click(submitButton)
     })
 
@@ -205,7 +222,9 @@ describe('SignUpForm', () => {
       renderSignUpForm({ showTermsAcceptance: true })
     })
 
-    expect(screen.getByText(/by creating an account, you agree/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/by creating an account, you agree/i)
+    ).toBeInTheDocument()
     expect(screen.getByText(/terms of service/i)).toBeInTheDocument()
     expect(screen.getByText(/privacy policy/i)).toBeInTheDocument()
   })
@@ -215,37 +234,23 @@ describe('SignUpForm', () => {
       renderSignUpForm({ showTermsAcceptance: false })
     })
 
-    expect(screen.queryByText(/by creating an account, you agree/i)).not.toBeInTheDocument()
-  })
-
-  it('should navigate to login page when "Sign in here" is clicked', async () => {
-    const mockOnRedirect = jest.fn()
-
-    await act(async () => {
-      renderSignUpForm({ onRedirect: mockOnRedirect })
-    })
-
-    const signInLink = screen.getByText(/sign in here/i)
-    
-    await act(async () => {
-      fireEvent.click(signInLink)
-    })
-
-    expect(mockOnRedirect).toHaveBeenCalledWith('/login')
+    expect(
+      screen.queryByText(/by creating an account, you agree/i)
+    ).not.toBeInTheDocument()
   })
 
   it('should navigate to terms page when terms link is clicked', async () => {
     const mockOnRedirect = jest.fn()
 
     await act(async () => {
-      renderSignUpForm({ 
+      renderSignUpForm({
         onRedirect: mockOnRedirect,
-        showTermsAcceptance: true 
+        showTermsAcceptance: true,
       })
     })
 
     const termsLink = screen.getByText(/terms of service/i)
-    
+
     await act(async () => {
       fireEvent.click(termsLink)
     })
@@ -257,14 +262,14 @@ describe('SignUpForm', () => {
     const mockOnRedirect = jest.fn()
 
     await act(async () => {
-      renderSignUpForm({ 
+      renderSignUpForm({
         onRedirect: mockOnRedirect,
-        showTermsAcceptance: true 
+        showTermsAcceptance: true,
       })
     })
 
     const privacyLink = screen.getByText(/privacy policy/i)
-    
+
     await act(async () => {
       fireEvent.click(privacyLink)
     })

@@ -1,14 +1,13 @@
 import '@testing-library/jest-dom'
-import React from 'react'
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { SignInForm } from '../src/SignInForm'
 
 // Mock window.location
 Object.defineProperty(window, 'location', {
   value: {
-    href: ''
+    href: '',
   },
-  writable: true
+  writable: true,
 })
 
 // Mock the auth client
@@ -18,8 +17,8 @@ jest.mock('@robosystems/auth-core', () => ({
     login: mockLogin,
     register: jest.fn(),
     logout: jest.fn(),
-    refreshSession: jest.fn()
-  }))
+    refreshSession: jest.fn(),
+  })),
 }))
 
 function renderSignInForm(props = {}) {
@@ -27,7 +26,7 @@ function renderSignInForm(props = {}) {
     apiUrl: 'https://api.test.com',
     onSuccess: jest.fn(),
     onRedirect: jest.fn(),
-    ...props
+    ...props,
   }
   return render(<SignInForm {...defaultProps} />)
 }
@@ -68,7 +67,7 @@ describe('SignInForm', () => {
   it('should call onSuccess and redirect on successful login', async () => {
     const mockOnSuccess = jest.fn()
     const mockUser = { id: '1', email: 'test@example.com', name: 'Test User' }
-    
+
     mockLogin.mockResolvedValueOnce({ user: mockUser })
 
     await act(async () => {
@@ -116,7 +115,9 @@ describe('SignInForm', () => {
 
   it('should show loading state during login', async () => {
     let resolveLogin: (value: any) => void
-    const loginPromise = new Promise(resolve => { resolveLogin = resolve })
+    const loginPromise = new Promise((resolve) => {
+      resolveLogin = resolve
+    })
     mockLogin.mockReturnValueOnce(loginPromise)
 
     await act(async () => {
@@ -142,19 +143,4 @@ describe('SignInForm', () => {
     })
   })
 
-  it('should navigate to register page when "Create one here" is clicked', async () => {
-    const mockOnRedirect = jest.fn()
-
-    await act(async () => {
-      renderSignInForm({ onRedirect: mockOnRedirect })
-    })
-
-    const createAccountLink = screen.getByText(/create one here/i)
-    
-    await act(async () => {
-      fireEvent.click(createAccountLink)
-    })
-
-    expect(mockOnRedirect).toHaveBeenCalledWith('/register')
-  })
 })
