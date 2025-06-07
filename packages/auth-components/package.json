@@ -27,7 +27,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@robosystems/auth-core": "*"
+    "@robosystems/auth-core": "^0.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6",

@@ -27,7 +27,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@robosystems/sdk": "workspace:*"
+    "@robosystems/sdk": "^0.1.0"
   },
   "devDependencies": {
     "@types/jest": "^29",
