@@ -1,404 +1,215 @@
 import React, { useState } from 'react'
-import { useAuth } from './AuthProvider'
-import { User } from '@robosystems/auth-core'
+import { RoboSystemsAuthClient, User } from '@robosystems/auth-core'
 
 export interface SignUpFormProps {
   onSuccess?: (user: User) => void
   onRedirect?: (url: string) => void
   redirectTo?: string
   className?: string
-  // Theme and styling options
-  theme?: {
-    container?: string
-    form?: string
-    title?: string
-    subtitle?: string
-    errorAlert?: string
-    fieldContainer?: string
-    label?: string
-    input?: string
-    button?: string
-    loadingButton?: string
-    linkText?: string
-    footer?: string
-    termsText?: string
-  }
-  // Content customization
-  content?: {
-    title?: string
-    subtitle?: string
-    nameLabel?: string
-    namePlaceholder?: string
-    emailLabel?: string
-    emailPlaceholder?: string
-    passwordLabel?: string
-    passwordPlaceholder?: string
-    confirmPasswordLabel?: string
-    confirmPasswordPlaceholder?: string
-    submitButton?: string
-    loadingText?: string
-    termsText?: string
-    termsLink?: string
-    termsLinkText?: string
-    privacyLink?: string
-    privacyLinkText?: string
-    signInText?: string
-    signInLink?: string
-    signInLinkText?: string
-  }
-  // Logo and branding
-  branding?: {
-    logo?: {
-      src: string
-      alt: string
-      width?: number
-      height?: number
-    }
-    appName?: string
-    showFooter?: boolean
-    footerText?: string
-  }
-  // Layout options
-  layout?: {
-    fullScreen?: boolean
-    showBackground?: boolean
-    backgroundClass?: string
-  }
-  // Features
-  features?: {
-    showConfirmPassword?: boolean
-    showTermsAcceptance?: boolean
-    autoSignIn?: boolean
-  }
-}
-
-const defaultTheme = {
-  container: 'min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900',
-  form: 'w-full max-w-md space-y-8',
-  title: 'font-bold text-3xl text-white text-center',
-  subtitle: 'text-gray-300 text-center mt-2',
-  errorAlert: 'p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md',
-  fieldContainer: 'space-y-4',
-  label: 'block text-sm font-medium text-gray-200',
-  input: 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-zinc-800/50 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500',
-  button: 'w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-300',
-  loadingButton: 'w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-gradient-to-r from-blue-700 to-blue-600 opacity-50 cursor-not-allowed',
-  linkText: 'font-medium text-blue-400 transition-colors hover:text-blue-300',
-  footer: 'text-center text-xs text-gray-500 space-y-2',
-  termsText: 'text-center text-xs leading-relaxed text-gray-400'
-}
-
-const defaultContent = {
-  title: 'Join the future',
-  subtitle: 'Create your account and get started',
-  nameLabel: 'Full Name',
-  namePlaceholder: 'Enter your full name',
-  emailLabel: 'Email Address',
-  emailPlaceholder: 'your.email@company.com',
-  passwordLabel: 'Password',
-  passwordPlaceholder: 'Create a secure password',
-  confirmPasswordLabel: 'Confirm Password',
-  confirmPasswordPlaceholder: 'Confirm your password',
-  submitButton: 'Create Account',
-  loadingText: 'Creating Account...',
-  termsText: 'By creating an account, you agree with our',
-  termsLink: '/pages/terms',
-  termsLinkText: 'Terms of Service',
-  privacyLink: '/pages/privacy',
-  privacyLinkText: 'Privacy Policy',
-  signInText: 'Already have an account?',
-  signInLink: '/login',
-  signInLinkText: 'Sign in here'
+  showConfirmPassword?: boolean
+  showTermsAcceptance?: boolean
+  autoSignIn?: boolean
+  apiUrl: string
 }
 
 export function SignUpForm({
   onSuccess,
   onRedirect,
-  redirectTo = '/home',
+  redirectTo = '/login',
   className = '',
-  theme = {},
-  content = {},
-  branding,
-  layout = {},
-  features = {}
+  showConfirmPassword = true,
+  showTermsAcceptance = true,
+  autoSignIn = false,
+  apiUrl
 }: SignUpFormProps) {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  })
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const { register, login } = useAuth()
+  const authClient = new RoboSystemsAuthClient(apiUrl)
 
-  // Merge themes, content, and features
-  const mergedTheme = { ...defaultTheme, ...theme }
-  const mergedContent = { ...defaultContent, ...content }
-  const { fullScreen = true, showBackground = true, backgroundClass } = layout
-  const { 
-    showConfirmPassword = false, 
-    showTermsAcceptance = true, 
-    autoSignIn = true 
-  } = features
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setLoading(true)
     setError('')
 
     // Validate confirm password if enabled
-    if (showConfirmPassword && password !== confirmPassword) {
+    if (showConfirmPassword && formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
-      setIsLoading(false)
+      setLoading(false)
       return
     }
 
     try {
-      const result = await register(email, password, name)
-      
-      if (result && autoSignIn) {
-        // Auto sign in after successful registration
-        const loginResult = await login(email, password)
-        if (loginResult && onSuccess) {
-          onSuccess(loginResult as User)
-        } else if (onRedirect) {
-          onRedirect(redirectTo)
-        }
-      } else if (result && onSuccess) {
-        onSuccess(result as User)
-      } else if (onRedirect) {
-        onRedirect(redirectTo)
+      const result = await authClient.register(formData.email, formData.password, formData.name)
+
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess(result.user)
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed')
+      
+      // Use window.location.href for reliable redirect
+      window.location.href = redirectTo
+    } catch (error: any) {
+      setError('Registration failed. Please try again.')
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
   const handleSignInClick = () => {
-    if (onRedirect && mergedContent.signInLink) {
-      onRedirect(mergedContent.signInLink)
+    if (onRedirect) {
+      onRedirect('/login')
+    } else {
+      window.location.href = '/login'
     }
   }
 
   const handleTermsClick = (link: string) => {
     if (onRedirect) {
       onRedirect(link)
+    } else {
+      window.location.href = link
     }
   }
 
-  const containerClass = fullScreen
-    ? `${showBackground ? (backgroundClass || mergedTheme.container) : ''} ${className}`
-    : className
-
-  const contentWrapper = fullScreen ? (
-    <div className={containerClass}>
-      <div className="absolute inset-0 bg-black/20"></div>
-      <div className="relative flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <FormContent />
-      </div>
-    </div>
-  ) : (
-    <div className={containerClass}>
-      <FormContent />
-    </div>
-  )
-
-  function FormContent() {
-    return (
-      <div className={mergedTheme.form}>
-        {/* Branding Header */}
-        {branding && (
-          <div className="text-center">
-            {branding.logo && (
-              <div className="mb-6 flex items-center justify-center">
-                <img
-                  src={branding.logo.src}
-                  alt={branding.logo.alt}
-                  width={branding.logo.width || 48}
-                  height={branding.logo.height || 48}
-                  className="mr-3"
-                />
-                {branding.appName && (
-                  <span className="font-heading text-3xl font-semibold text-white">
-                    {branding.appName}
-                  </span>
-                )}
-              </div>
-            )}
-            <h1 className={mergedTheme.title}>
-              {mergedContent.title}
-            </h1>
-            <p className={mergedTheme.subtitle}>
-              {mergedContent.subtitle}
-            </p>
+  return (
+    <div className={className}>
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        {error && (
+          <div className="p-3 text-sm text-red-300 bg-red-900 border border-red-600 rounded-md">
+            {error}
           </div>
         )}
+        
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-200">
+              Full Name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+              className="mt-1 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+              placeholder="Enter your full name"
+              disabled={loading}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-200">
+              Email Address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              className="mt-1 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+              placeholder="your.email@company.com"
+              disabled={loading}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-200">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              required
+              className="mt-1 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+              placeholder="Create a secure password"
+              disabled={loading}
+            />
+          </div>
 
-        {/* Form Card */}
-        <div className="border-gray-700/50 bg-zinc-900/80 backdrop-blur-sm rounded-lg p-6">
-          <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className={mergedTheme.errorAlert}>
-                {error}
-              </div>
-            )}
-            
-            <div className={mergedTheme.fieldContainer}>
-              <div>
-                <label htmlFor="name" className={mergedTheme.label}>
-                  {mergedContent.nameLabel}
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className={`${mergedTheme.input} mt-1`}
-                  placeholder={mergedContent.namePlaceholder}
-                  disabled={isLoading}
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="email" className={mergedTheme.label}>
-                  {mergedContent.emailLabel}
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className={`${mergedTheme.input} mt-1`}
-                  placeholder={mergedContent.emailPlaceholder}
-                  disabled={isLoading}
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="password" className={mergedTheme.label}>
-                  {mergedContent.passwordLabel}
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className={`${mergedTheme.input} mt-1`}
-                  placeholder={mergedContent.passwordPlaceholder}
-                  disabled={isLoading}
-                />
-              </div>
-
-              {showConfirmPassword && (
-                <div>
-                  <label htmlFor="confirmPassword" className={mergedTheme.label}>
-                    {mergedContent.confirmPasswordLabel}
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className={`${mergedTheme.input} mt-1`}
-                    placeholder={mergedContent.confirmPasswordPlaceholder}
-                    disabled={isLoading}
-                  />
-                </div>
-              )}
+          {showConfirmPassword && (
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-200">
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                required
+                className="mt-1 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                placeholder="Confirm your password"
+                disabled={loading}
+              />
             </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={isLoading ? mergedTheme.loadingButton : mergedTheme.button}
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <svg
-                    className="-ml-1 mr-3 h-5 w-5 animate-spin text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  {mergedContent.loadingText}
-                </div>
-              ) : (
-                mergedContent.submitButton
-              )}
-            </button>
-
-            {showTermsAcceptance && (
-              <div className={mergedTheme.termsText}>
-                {mergedContent.termsText}{' '}
-                <button
-                  type="button"
-                  onClick={() => handleTermsClick(mergedContent.termsLink)}
-                  className={mergedTheme.linkText}
-                >
-                  {mergedContent.termsLinkText}
-                </button>{' '}
-                and{' '}
-                <button
-                  type="button"
-                  onClick={() => handleTermsClick(mergedContent.privacyLink)}
-                  className={mergedTheme.linkText}
-                >
-                  {mergedContent.privacyLinkText}
-                </button>
-              </div>
-            )}
-
-            <div className="text-center">
-              <p className="text-sm text-gray-400">
-                {mergedContent.signInText}{' '}
-                <button
-                  type="button"
-                  onClick={handleSignInClick}
-                  className={mergedTheme.linkText}
-                >
-                  {mergedContent.signInLinkText}
-                </button>
-              </p>
-            </div>
-          </form>
+          )}
         </div>
 
-        {/* Footer */}
-        {branding?.showFooter && branding.footerText && (
-          <div className={mergedTheme.footer}>
-            <p>{branding.footerText}</p>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 px-4 rounded-md text-lg font-medium text-white bg-blue-600 hover:bg-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? 'Creating Account...' : 'Create Account'}
+        </button>
+
+        {showTermsAcceptance && (
+          <div className="text-center text-xs text-gray-400">
+            By creating an account, you agree with our{' '}
+            <button
+              type="button"
+              onClick={() => handleTermsClick('/pages/terms')}
+              className="font-medium text-blue-400 hover:text-blue-300"
+            >
+              Terms of Service
+            </button>{' '}
+            and{' '}
+            <button
+              type="button"
+              onClick={() => handleTermsClick('/pages/privacy')}
+              className="font-medium text-blue-400 hover:text-blue-300"
+            >
+              Privacy Policy
+            </button>
           </div>
         )}
-      </div>
-    )
-  }
 
-  return contentWrapper
+        <div className="text-center">
+          <p className="text-sm text-gray-400">
+            Already have an account?{' '}
+            <button
+              type="button"
+              onClick={handleSignInClick}
+              className="font-medium text-blue-400 hover:text-blue-300"
+            >
+              Sign in here
+            </button>
+          </p>
+        </div>
+      </form>
+    </div>
+  )
 }
 
-// Export default theme and content for easy customization
-export { defaultTheme as signUpDefaultTheme, defaultContent as signUpDefaultContent }
