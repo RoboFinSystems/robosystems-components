@@ -26,7 +26,9 @@
     "test:coverage": "jest --coverage",
     "clean": "rm -rf dist"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@robosystems/sdk": "workspace:*"
+  },
   "devDependencies": {
     "@types/jest": "^29",
     "@types/node": "^20.12.7",

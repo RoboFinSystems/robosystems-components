@@ -1,4 +1,15 @@
 import { 
+  registerUser,
+  loginUser,
+  logoutUser,
+  getCurrentAuthUser,
+  refreshSession,
+  listUserApiKeys,
+  createUserApiKey,
+  revokeUserApiKey,
+  client
+} from '@robosystems/sdk'
+import { 
   User, 
   AuthResponse, 
   LoginRequest, 
@@ -8,120 +19,117 @@ import {
 } from './types'
 
 export class RoboSystemsAuthClient {
-  private baseUrl: string
+  private client: typeof client
 
   constructor(baseUrl: string) {
-    this.baseUrl = baseUrl.replace(/\/$/, '') // Remove trailing slash
+    // Configure the SDK client with the provided base URL and credentials
+    this.client = client
+    this.client.setConfig({
+      baseUrl: baseUrl.replace(/\/$/, ''), // Remove trailing slash
+      credentials: 'include' // Essential for cookie-based authentication
+    })
   }
 
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Include cookies
-      body: JSON.stringify({ email, password } as LoginRequest)
+    const response = await loginUser({
+      client: this.client,
+      body: { email, password }
     })
 
-    if (!response.ok) {
-      throw new Error(`Login failed: ${response.statusText}`)
+    const sdkResponse = response.data as any
+    return {
+      user: sdkResponse.user as User,
+      success: true,
+      message: sdkResponse.message
     }
-
-    return response.json()
   }
 
   async register(email: string, password: string, name?: string): Promise<AuthResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ email, password, name } as RegisterRequest)
+    const response = await registerUser({
+      client: this.client,
+      body: { email, password, name: name || '' }
     })
 
-    if (!response.ok) {
-      throw new Error(`Registration failed: ${response.statusText}`)
+    const sdkResponse = response.data as any
+    return {
+      user: sdkResponse.user as User,
+      success: true,
+      message: sdkResponse.message
     }
-
-    return response.json()
   }
 
   async logout(): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/v1/auth/logout`, {
-      method: 'POST',
-      credentials: 'include'
+    await logoutUser({
+      client: this.client
     })
-
-    if (!response.ok) {
-      throw new Error(`Logout failed: ${response.statusText}`)
-    }
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await fetch(`${this.baseUrl}/v1/auth/me`, {
-      credentials: 'include'
+    const response = await getCurrentAuthUser({
+      client: this.client
     })
 
-    if (!response.ok) {
-      throw new Error(`Failed to get current user: ${response.statusText}`)
-    }
-
-    const data = await response.json()
+    const data = response.data as any
     return data.user
   }
 
   async refreshSession(): Promise<AuthResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include'
+    const response = await refreshSession({
+      client: this.client
     })
 
-    if (!response.ok) {
-      throw new Error(`Session refresh failed: ${response.statusText}`)
+    const sdkResponse = response.data as any
+    return {
+      user: sdkResponse.user as User,
+      success: true,
+      message: sdkResponse.message
     }
-
-    return response.json()
   }
 
   async createAPIKey(request: CreateAPIKeyRequest): Promise<APIKey> {
-    const response = await fetch(`${this.baseUrl}/v1/auth/api-keys`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify(request)
+    const response = await createUserApiKey({
+      client: this.client,
+      body: {
+        name: request.name,
+        description: request.permissions.join(', ') // Map permissions to description for now
+      }
     })
 
-    if (!response.ok) {
-      throw new Error(`Failed to create API key: ${response.statusText}`)
+    const sdkResponse = response.data as any
+    return {
+      id: sdkResponse.api_key.id,
+      name: sdkResponse.api_key.name,
+      key: sdkResponse.key,
+      permissions: request.permissions,
+      graphId: request.graphId,
+      createdAt: sdkResponse.api_key.created_at,
+      isActive: sdkResponse.api_key.is_active,
+      lastUsedAt: sdkResponse.api_key.last_used_at,
+      expiresAt: request.expiresAt
     }
-
-    return response.json()
   }
 
   async getAPIKeys(): Promise<APIKey[]> {
-    const response = await fetch(`${this.baseUrl}/v1/auth/api-keys`, {
-      credentials: 'include'
+    const response = await listUserApiKeys({
+      client: this.client
     })
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch API keys: ${response.statusText}`)
-    }
-
-    return response.json()
+    const sdkResponse = response.data as any
+    return sdkResponse.api_keys.map((apiKey: any) => ({
+      id: apiKey.id,
+      name: apiKey.name,
+      key: apiKey.prefix + '...', // Only prefix is available in list
+      permissions: [], // Not available in the SDK response
+      createdAt: apiKey.created_at,
+      isActive: apiKey.is_active,
+      lastUsedAt: apiKey.last_used_at
+    }))
   }
 
   async revokeAPIKey(keyId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/v1/auth/api-keys/${keyId}`, {
-      method: 'DELETE',
-      credentials: 'include'
+    await revokeUserApiKey({
+      client: this.client,
+      path: { api_key_id: keyId }
     })
-
-    if (!response.ok) {
-      throw new Error(`Failed to revoke API key: ${response.statusText}`)
-    }
   }
 }
